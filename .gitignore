@@ -1,3 +1,8 @@
 # pyenv #
 venv
 __pycache__
+
+
+# Images Folder #
+images
+.DS_Store

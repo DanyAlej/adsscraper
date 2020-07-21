@@ -6,9 +6,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from random import randint
 from pymongo import MongoClient
 from bson.binary import Binary
-import sys
+import sys, os
 from selenium.webdriver.common.keys import Keys
 import requests
+import shutil
 
 class ad():
     pass
@@ -64,10 +65,14 @@ def peristAds():
     creative_url = driver.find_element_by_xpath('//img[starts-with(@class,"_7jys")]').get_property('src')
     counter = 1
     file_creative_name = "SamOvens_creative" + str(counter)
+    file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
+    file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
+    print(file_path)
     r = requests.get(creative_url, stream = True)
     r.raw.decode_content = True
-    print(file_creative_name)
-
+    with open(file_creative_name, 'wb') as f:
+        shutil.copyfileobj(r.raw, f)
+        shutil.move(file_path, file_path_destination)
 
 
 

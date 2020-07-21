@@ -1,12 +1,15 @@
 import time
-from selenium import webdriver
+import shutil
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.action_chains import ActionChains
 from random import randint
 from pymongo import MongoClient
+from selenium import webdriver
 import sys
 from selenium.webdriver.common.keys import Keys
+import requests
+import os
 
 class ad():
     pass
@@ -16,7 +19,7 @@ def loadAds():
     time.sleep(4)
     search_bar = driver.find_element_by_xpath('//input[starts-with(@type,"text")]')
     time.sleep(1)
-    search_bar.send_keys("Sam Ovens")
+    search_bar.send_keys(fb_page)
     time.sleep(3)
 
     driver.find_element_by_xpath('//div[starts-with(@class,"_7h2l")]').click()
@@ -63,19 +66,19 @@ def clickAllAds():
     driver.execute_script("window.scrollTo(0, 0)")
     return ads_copy_div
 
-
 def peristAds():
     ad_containers = driver.find_elements_by_xpath('//div[@class="_99s5"]')
     displayed_containers = cleanContainer(ad_containers) 
-    # creative_url = driver.find_element_by_xpath('//img[starts-with(@class,"_7jys")]').get_property('src')
-    # counter = 1
-    # file_creative_name = "SamOvens_creative" + str(counter)
-    # r = requests.get(creative_url, stream = True)
-    # r.raw.decode_content = True
-    # print(file_creative_name)
-
+    counter=0
+    database_name = fb_page.replace(' ', '_')
+    client = MongoClient()
+    db = client['ads']
+    collection = db[database_name]
     for ad in displayed_containers:
-        persistSingleAd(ad)
+        an_ad = createSingleAd(ad, counter)
+        counter += 1
+        collection.insert_one(an_ad)
+    client.close()
 
 def cleanContainer(ad_containers):
     displayed_containers = []
@@ -84,7 +87,7 @@ def cleanContainer(ad_containers):
             displayed_containers.append(ad)
     return displayed_containers
 
-def persistSingleAd(ad):
+def createSingleAd(ad, counter):
     started_running = ad.find_element_by_xpath('.//div[@class="_7jwu"]').text
     copy = ad.find_element_by_xpath('.//div[@class="_7jyr"]').text
     headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
@@ -92,8 +95,27 @@ def persistSingleAd(ad):
     image_facebook_link = None 
     try:
         image_facebook_link = ad.find_element_by_xpath('.//img[starts-with(@class,"_7jys")]').get_property('src')
+        file_creative_name = fb_page + "_creative" + str(counter)
+        file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
+        file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
+        r = requests.get(image_facebook_link, stream = True)
+        r.raw.decode_content = True
+        with open(file_creative_name, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+            shutil.move(file_path, file_path_destination)
     except:
         video = True
+    an_ad = {}
+    an_ad['started_running'] = started_running
+    an_ad['copy'] = copy
+    an_ad['headline'] = headline
+    an_ad['fb_destination_link'] = fb_destination_link
+    if image_facebook_link is not None:
+        an_ad['image_facebook_link'] = image_facebook_link
+    else:
+        an_ad['video'] = "True" 
+    an_ad['fb_destination_link'] = fb_destination_link
+    return an_ad
 
 def parseLink(link):
     first_index = link.index('=http') + 1
@@ -103,7 +125,7 @@ def parseLink(link):
     return parsed_link
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
-
+fb_page = str(sys.argv[1])
 loadAds()
 scrollToBotton()
 ads = clickAllAds()
