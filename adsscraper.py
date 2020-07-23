@@ -63,6 +63,7 @@ def clickAllAds():
             time.sleep(0.5)
         except:
             ads_copy_div.remove(ad)
+    time.sleep(3)
     driver.execute_script("window.scrollTo(0, 0)")
     return ads_copy_div
 
@@ -84,7 +85,11 @@ def createSingleAd(ad, counter):
     started_running = ad.find_element_by_xpath('.//div[@class="_7jwu"]').text
     copy = ad.find_element_by_xpath('.//div[@class="_7jyr"]').text
     headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
-    fb_destination_link = parseLink(ad.find_element_by_xpath('.//a[starts-with(@class,"_231w")]').get_attribute('href'))
+    fb_destination_link = "No link"
+    try:
+        fb_destination_link = parseLink(ad.find_element_by_xpath('.//a[starts-with(@class,"_231w")]').get_attribute('href'))
+    except:
+        pass
     image_facebook_link = None 
     video = False
     try:
@@ -112,9 +117,10 @@ def createSingleAd(ad, counter):
     return an_ad
 
 def parseLink(link):
-    slicer = slice(link.index('=http') + 1, link.index('h=') - 1)
-    return link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
-
+    if '=http' in link:
+        slicer = slice(link.index('=http') + 1, link.index('h=') - 1)
+        link = link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
+    return link
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
