@@ -89,25 +89,17 @@ def createSingleAd(ad, counter):
     video = False
     try:
         image_facebook_link = ad.find_element_by_xpath('.//img[starts-with(@class,"_7jys")]').get_property('src')
-        file_creative_name = fb_page + "_creative" + str(counter)
-        file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
-        file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
-        r = requests.get(image_facebook_link, stream = True)
-        r.raw.decode_content = True
-        with open(file_creative_name, 'wb') as f:
-            shutil.copyfileobj(r.raw, f)
-            shutil.move(file_path, file_path_destination)
     except:
         video = True
         image_facebook_link = ad.find_element_by_xpath('.//video').get_property('poster')
-        file_creative_name = fb_page + "_creative" + str(counter)
-        file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
-        file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
-        r = requests.get(image_facebook_link, stream = True)
-        r.raw.decode_content = True
-        with open(file_creative_name, 'wb') as f:
-            shutil.copyfileobj(r.raw, f)
-            shutil.move(file_path, file_path_destination)
+    file_creative_name = fb_page + "_creative" + str(counter)
+    file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
+    file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
+    r = requests.get(image_facebook_link, stream = True)
+    r.raw.decode_content = True
+    with open(file_creative_name, 'wb') as f:
+        shutil.copyfileobj(r.raw, f)
+        shutil.move(file_path, file_path_destination)
     an_ad = {}
     an_ad['started_running'] = started_running
     an_ad['copy'] = copy
