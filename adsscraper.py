@@ -1,4 +1,5 @@
 import time
+from datetime import date
 import shutil
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.webelement import WebElement
@@ -106,6 +107,9 @@ def createSingleAd(ad, counter):
         shutil.copyfileobj(r.raw, f)
         shutil.move(file_path, file_path_destination)
     an_ad = {}
+    an_ad['niche'] = niche 
+    an_ad['products'] = products 
+    an_ad['date_retrieved'] = today 
     an_ad['started_running'] = started_running
     an_ad['copy'] = copy
     an_ad['headline'] = headline
@@ -123,8 +127,10 @@ def parseLink(link):
     return link
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
-
+today = date.today().strftime('%d/%m/%Y')
 fb_page = str(sys.argv[1])
+niche = str(sys.argv[2])
+products = str(sys.argv[3])
 loadAds()
 scrollToBotton()
 clickAllAds()

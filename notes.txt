@@ -1,0 +1,10 @@
+I need to index easily in the future a few manually input variables and then be able to schedule the scraping every hour with whatever manual input.
+Things to index and input this can also be called metadata:
+- Name of the Facebook page
+- Niche (a string separated by commas)
+- Products being sold (a string separated by commas)
+
+
+Niches:
+Infoproduct
+Courses
