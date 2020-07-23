@@ -69,23 +69,16 @@ def clickAllAds():
 def peristAds():
     ad_containers = driver.find_elements_by_xpath('//div[@class="_99s5"]')
     displayed_containers = cleanContainer(ad_containers) 
-    counter=0
     database_name = fb_page.replace(' ', '_')
     client = MongoClient()
     db = client['ads']
     collection = db[database_name]
-    for ad in displayed_containers:
-        an_ad = createSingleAd(ad, counter)
-        counter += 1
-        collection.insert_one(an_ad)
+    for i, ad in enumerate(displayed_containers):
+        collection.insert_one(createSingleAd(ad, i))
     client.close()
 
 def cleanContainer(ad_containers):
-    displayed_containers = []
-    for ad in ad_containers:
-        if (ad.is_displayed() == True): 
-            displayed_containers.append(ad)
-    return displayed_containers
+    return [ad for ad in ad_containers if ad.is_displayed()]
 
 def createSingleAd(ad, counter):
     started_running = ad.find_element_by_xpath('.//div[@class="_7jwu"]').text
@@ -93,6 +86,7 @@ def createSingleAd(ad, counter):
     headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
     fb_destination_link = parseLink(ad.find_element_by_xpath('.//a[starts-with(@class,"_231w")]').get_attribute('href'))
     image_facebook_link = None 
+    video = False
     try:
         image_facebook_link = ad.find_element_by_xpath('.//img[starts-with(@class,"_7jys")]').get_property('src')
         file_creative_name = fb_page + "_creative" + str(counter)
@@ -105,30 +99,37 @@ def createSingleAd(ad, counter):
             shutil.move(file_path, file_path_destination)
     except:
         video = True
+        image_facebook_link = ad.find_element_by_xpath('.//video').get_property('poster')
+        file_creative_name = fb_page + "_creative" + str(counter)
+        file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
+        file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
+        r = requests.get(image_facebook_link, stream = True)
+        r.raw.decode_content = True
+        with open(file_creative_name, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+            shutil.move(file_path, file_path_destination)
     an_ad = {}
     an_ad['started_running'] = started_running
     an_ad['copy'] = copy
     an_ad['headline'] = headline
     an_ad['fb_destination_link'] = fb_destination_link
-    if image_facebook_link is not None:
-        an_ad['image_facebook_link'] = image_facebook_link
-    else:
+    an_ad['image_facebook_link'] = image_facebook_link
+    if video:
         an_ad['video'] = "True" 
     an_ad['fb_destination_link'] = fb_destination_link
     return an_ad
 
 def parseLink(link):
-    first_index = link.index('=http') + 1
-    second_index = link.index('h=') - 1
-    slicer = slice(first_index, second_index)
-    parsed_link = link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
-    return parsed_link
+    slicer = slice(link.index('=http') + 1, link.index('h=') - 1)
+    return link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
+
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
+
 fb_page = str(sys.argv[1])
 loadAds()
 scrollToBotton()
-ads = clickAllAds()
+clickAllAds()
 peristAds()
 
 driver.close()
