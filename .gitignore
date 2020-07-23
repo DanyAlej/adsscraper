@@ -6,3 +6,6 @@ __pycache__
 # Images Folder #
 images
 .DS_Store
+
+# pages retrieved #
+pagesRetrieved.txt

@@ -4,7 +4,6 @@ import shutil
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.action_chains import ActionChains
-from random import randint
 from pymongo import MongoClient
 from selenium import webdriver
 import sys
@@ -46,15 +45,28 @@ def loadAds():
     driver.find_element_by_xpath('//div[starts-with(@class,"_7h2l")]').click()
     time.sleep(3)
 
-def scrollToBotton():
-    last_ht, ht = 0, 1
-    while last_ht != ht:
-        last_ht = ht
-        time.sleep(randint(3,6))
-        ht = driver.execute_script("""window.scrollTo(0, document.body.scrollHeight); return window.scrollHeight;""")
-    time.sleep(3)
-    driver.execute_script("window.scrollTo(0, 0)")
+def scroll_to_bottom():
 
+    old_position = 0
+    new_position = None
+
+    while new_position != old_position:
+        # Get old scroll position
+        old_position = driver.execute_script(
+                ("return (window.pageYOffset !== undefined) ?"
+                 " window.pageYOffset : (document.documentElement ||"
+                 " document.body.parentNode || document.body);"))
+        # Sleep and Scroll
+        time.sleep(3)
+        driver.execute_script((
+                "var scrollingElement = (document.scrollingElement ||"
+                " document.body);scrollingElement.scrollTop ="
+                " scrollingElement.scrollHeight;"))
+        # Get new position
+        new_position = driver.execute_script(
+                ("return (window.pageYOffset !== undefined) ?"
+                 " window.pageYOffset : (document.documentElement ||"
+                 " document.body.parentNode || document.body);"))
 def clickAllAds():
     ads_copy_div = driver.find_elements_by_xpath('//div[@class="_7jyr"]')
     time.sleep(3)
@@ -84,8 +96,16 @@ def cleanContainer(ad_containers):
 
 def createSingleAd(ad, counter):
     started_running = ad.find_element_by_xpath('.//div[@class="_7jwu"]').text
-    copy = ad.find_element_by_xpath('.//div[@class="_7jyr"]').text
-    headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
+    copy = "No copy"
+    try:
+        copy = ad.find_element_by_xpath('.//div[@class="_7jyr"]').text
+    except:
+        pass
+    headline = "No headline"
+    try:
+        headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
+    except:
+        pass
     fb_destination_link = "No link"
     try:
         fb_destination_link = parseLink(ad.find_element_by_xpath('.//a[starts-with(@class,"_231w")]').get_attribute('href'))
@@ -132,7 +152,7 @@ fb_page = str(sys.argv[1])
 niche = str(sys.argv[2])
 products = str(sys.argv[3])
 loadAds()
-scrollToBotton()
+scroll_to_bottom()
 clickAllAds()
 peristAds()
 
