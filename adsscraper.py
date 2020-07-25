@@ -51,31 +51,38 @@ def scroll_to_bottom():
     new_position = None
 
     while new_position != old_position:
-        # Get old scroll position
         old_position = driver.execute_script(
                 ("return (window.pageYOffset !== undefined) ?"
                  " window.pageYOffset : (document.documentElement ||"
                  " document.body.parentNode || document.body);"))
-        # Sleep and Scroll
         time.sleep(3)
         driver.execute_script((
                 "var scrollingElement = (document.scrollingElement ||"
                 " document.body);scrollingElement.scrollTop ="
                 " scrollingElement.scrollHeight;"))
-        # Get new position
         new_position = driver.execute_script(
                 ("return (window.pageYOffset !== undefined) ?"
                  " window.pageYOffset : (document.documentElement ||"
                  " document.body.parentNode || document.body);"))
+    driver.execute_script("window.scrollTo(0, 0);")
+
+def has_link(ad):
+    try:
+        ad.find_element_by_xpath('//a')
+        return True
+    except:
+        return False
+
 def clickAllAds():
     ads_copy_div = driver.find_elements_by_xpath('//div[@class="_7jyr"]')
     time.sleep(3)
     for ad in ads_copy_div:
-        try:
-            ad.click()
-            time.sleep(0.5)
-        except:
-            ads_copy_div.remove(ad)
+        if not has_link(ad):
+            try:
+                ad.click()
+                time.sleep(0.5)
+            except:
+                ads_copy_div.remove(ad)
     time.sleep(3)
     driver.execute_script("window.scrollTo(0, 0)")
     return ads_copy_div
@@ -116,16 +123,21 @@ def createSingleAd(ad, counter):
     try:
         image_facebook_link = ad.find_element_by_xpath('.//img[starts-with(@class,"_7jys")]').get_property('src')
     except:
-        video = True
+        pass
+    try:
         image_facebook_link = ad.find_element_by_xpath('.//video').get_property('poster')
-    file_creative_name = fb_page + "_creative" + str(counter)
-    file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
-    file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
-    r = requests.get(image_facebook_link, stream = True)
-    r.raw.decode_content = True
-    with open(file_creative_name, 'wb') as f:
-        shutil.copyfileobj(r.raw, f)
-        shutil.move(file_path, file_path_destination)
+        video = True
+    except:
+        pass
+    if image_facebook_link is not None:
+        file_creative_name = fb_page + "_creative" + str(counter)
+        file_path = os.path.abspath(os.getcwd()) + '/' +  file_creative_name
+        file_path_destination = os.path.abspath(os.getcwd()) + '/images/'
+        r = requests.get(image_facebook_link, stream = True)
+        r.raw.decode_content = True
+        with open(file_creative_name, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+            shutil.move(file_path, file_path_destination)
     an_ad = {}
     an_ad['niche'] = niche 
     an_ad['products'] = products 
@@ -141,7 +153,9 @@ def createSingleAd(ad, counter):
     return an_ad
 
 def parseLink(link):
-    if '=http' in link:
+    if link is None:
+        pass
+    elif '=http' in link:
         slicer = slice(link.index('=http') + 1, link.index('h=') - 1)
         link = link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
     return link
