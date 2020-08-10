@@ -12,14 +12,14 @@ mongo = PyMongo(app)
 @app.route('/ads', methods=['GET'])
 @cross_origin(supports_credentials=True)
 def get_ads():
-    ads = mongo.db.testCollection.find()
+    ads = mongo.db.test_collection.find()
     response = json_util.dumps(ads)
     return Response(response, mimetype='application/json') 
 
 @app.route('/ads/<adId>', methods=['GET'])
 @cross_origin(supports_credentials=True)
 def get_ad(adId):
-    ad = mongo.db.testCollection.find_one({'_id': ObjectId(adId)})
+    ad = mongo.db.test_collection.find_one({'_id': ObjectId(adId)})
     response = json_util.dumps(ad)
     return Response(response, mimetype='application/json') 
 

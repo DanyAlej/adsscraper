@@ -148,6 +148,8 @@ def createSingleAd(ad, counter):
     an_ad['headline'] = headline
     an_ad['fb_destination_link'] = fb_destination_link
     an_ad['image_facebook_link'] = image_facebook_link
+    an_ad['likes'] = 0
+    an_ad['dislikes'] = 0
     if video:
         an_ad['video'] = "True" 
     an_ad['fb_destination_link'] = fb_destination_link
