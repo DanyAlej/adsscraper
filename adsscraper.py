@@ -1,5 +1,5 @@
 import time
-
+from selenium.webdriver.support.ui import WebDriverWait
 from datetime import date
 import shutil
 from webdriver_manager.chrome import ChromeDriverManager
@@ -11,6 +11,8 @@ import sys
 from selenium.webdriver.common.keys import Keys
 import requests
 import os
+from selenium.webdriver.support import expected_conditions
+
 
 class ad():
     pass
@@ -33,11 +35,10 @@ def loadAds():
     time.sleep(3)
 
     driver.find_element_by_xpath('//span[starts-with(@class,"_7fc8")]').click()
-    time.sleep(3)
+    time.sleep(4)
 
-    driver.find_element_by_xpath('//div[starts-with(@class,"ellipsis")]').click()
-    time.sleep(3)
-
+    driver.find_element_by_xpath('//div[starts-with(@class,"_92d3")]').click()
+    time.sleep(4)
 
     search_bar = driver.find_element_by_xpath('//input[starts-with(@type,"text")]')
     search_bar.click()
@@ -103,7 +104,7 @@ def cleanContainer(ad_containers):
     return [ad for ad in ad_containers if ad.is_displayed()]
 
 def createSingleAd(ad, counter):
-    started_running = ad.find_element_by_xpath('.//div[@class="_7jwu"]').text
+    started_running = ad.find_element_by_xpath('.//div[@class=" _9cd3"]').text
     copy = "No copy"
     try:
         copy = ad.find_element_by_xpath('.//div[@class="_7jyr"]').text
@@ -111,7 +112,7 @@ def createSingleAd(ad, counter):
         pass
     headline = "No headline"
     try:
-        headline = ad.find_element_by_xpath('.//div[@class="_8jh2"]').text
+        headline = ad.find_element_by_xpath('.//div[@class="_4ik4"]').text
     except:
         pass
     fb_destination_link = "No link"
@@ -153,6 +154,7 @@ def createSingleAd(ad, counter):
     if video:
         an_ad['video'] = "True" 
     an_ad['fb_destination_link'] = fb_destination_link
+    an_ad['score'] = calculate_score(today, started_running)
     return an_ad
 
 def parseLink(link):
@@ -162,6 +164,41 @@ def parseLink(link):
         slicer = slice(link.index('=http') + 1, link.index('h=') - 1)
         link = link[slicer].replace('%2F', '/').replace('%3A', ':').replace('%3F', '?').replace('%3D', '=')
     return link
+
+def calculate_score(date_retrieved, started_running):
+        date_retrieved = date_retrieved.split('/')
+        date_retrieved= date(int(date_retrieved[2]), int(date_retrieved[1]), int(date_retrieved[0]))
+        date_started_running = started_running.split(' ')
+        date_started_running = date(int(date_started_running[5].replace(',','')), int(month_string_to_number(date_started_running[3].replace(',',''))), int(date_started_running[4].replace(',', '')))
+        delta_time = date_retrieved - date_started_running
+        score = delta_time.days + 10
+        if score > 90: 
+            score = 90
+        print(score)
+        return score
+
+def month_string_to_number(string):
+    m = {
+        'jan': 1,
+        'feb': 2,
+        'mar': 3,
+        'apr':4,
+        'may':5,
+        'jun':6,
+        'jul':7,
+        'aug':8,
+        'sep':9,
+        'oct':10,
+        'nov':11,
+        'dec':12
+        }
+    s = string.strip()[:3].lower()
+
+    try:
+        out = m[s]
+        return out
+    except:
+        raise ValueError('Not a month')
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 today = date.today().strftime('%d/%m/%Y')
